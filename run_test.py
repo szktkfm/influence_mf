@@ -47,12 +47,13 @@ if __name__ == '__main__':
     lr_decay_every = 2
     lr_decay_rate = params['lr_decay_rate']
 
-    nfm = model.NFM(int(embedding_dim), user_size, item_size, layer_size).to(device)
+    mf = model.MF(int(embedding_dim), user_size, item_size, layer_size).to(device)
     iterater = training.TrainIterater(batch_size=batch_size, data_dir=data_dir)
 
-    score = iterater.iterate_epoch(nfm, lr, epoch=1000, weight_decay=weight_decay, warmup=warmup, 
-                            lr_decay_rate=lr_decay_rate, lr_decay_every=lr_decay_every, eval_every=100)
+    #score = iterater.iterate_epoch(nfm, lr, epoch=1000, weight_decay=weight_decay, warmup=warmup, 
+    #                        lr_decay_rate=lr_decay_rate, lr_decay_every=lr_decay_every, eval_every=100)
 
     torch.cuda.empty_cache()
 
-    np.savetxt('score.txt', np.array([score]))
+    torch.save(mf, './model.torch')
+    #np.savetxt('score.txt', np.array([score]))

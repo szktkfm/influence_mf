@@ -36,6 +36,7 @@ class MF(nn.Module):
         user_embed = self.user_embed(user_tensor)
         item_embed = self.item_embed(item_tensor)
         
+        interaction_embed = user_embed * item_embed
         batch_size = interaction_embed.shape[0]
 
         bias = self.user_lin(user_tensor) + self.item_lin(item_tensor)
