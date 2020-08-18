@@ -41,4 +41,5 @@ for row in dataset.user_item_train_df.values:
     if target_user == row[0] or target_item == row[1]:
         train_data.append(row)
 
+target_data = [target_user, target_item]
 influ = get_influence(loss_func, train_data[0], mf)
