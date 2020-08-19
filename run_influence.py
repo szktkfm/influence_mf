@@ -41,9 +41,9 @@ for row in dataset.user_item_train_df.values:
     if target_user == row[0] or target_item == row[1]:
         train_data.append(row)
 
-print(len(train_data))
 
 test_data = [target_user, target_item]
 for i in range(len(train_data)):
     influ = get_influence(loss_func, train_data[i], test_data, mf)
     print(influ)
+    break
