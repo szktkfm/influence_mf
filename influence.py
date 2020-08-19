@@ -42,21 +42,45 @@ def predict_gradient(test_data, model):
     return torch.cat(grad, dim=1)[0]
 
 
-# うまくやりたい
 def hessian_vector_product(model, grad_loss, v):
     w = torch.dot(grad_loss, v)
-    w.backward()
-    params = model.parameters()
-    hv = []
-    for p in params:
-        hv.append(p.grad.view(1, p.shape[0]*p.shape[1]))
+    grads = torch.autograd.grad(w, model.parameters(), retain_graph=True)
+    grad = []
+    for g in grads:
+        tmp = g.view(1, g.shape[0] * g.shape[1])
+        grad.append(tmp)
 
-    return torch.cat(hv, dim=1)[0]
+    return torch.cat(grad, dim=1)[0]
 
 
+def conjugate_grad(model, grad_loss, m, grad):
+    a = torch.dot(m, hessian_vector_product(model, grad_loss, m))
+    b = torch.dot(m, hessian_vector_product(model, grad_loss, grad))
+    m = grad - (b / a) * m 
 
-def hessian_inverse_vector_product():
-    return 0
+    return m
+
+def hessian_inverse_vector_product(model, grad_loss, v):
+    tol = 1e-7
+    max_iter = 100
+    # init
+    x = torch.rand(v.size())
+    grad = hessian_vector_product(model, grad_loss, x) - v
+    m = grad
+    lr = -1 * torch.dot(m, grad) / torch.dot(m, hessian_vector_product(model, grad_loss, m))
+    x = x + lr * m
+
+    # 共役勾配法で解く
+    for i in range(max_iter):
+        pre_x = x
+        grad = hessian_vector_product(model, grad_loss, x) - v
+        m = conjugate_grad(model, grad_loss, m, grad)
+        lr = -1 * torch.dot(m, grad) / torch.dot(m, hessian_vector_product(model, grad_loss, m))
+        x = x + lr * m
+        if torch.norm(pre_x - x) < tol * x.shape[0]:
+            break
+
+    return x
 
 
 def get_influence(loss_func, train_data, test_data, model):
@@ -64,6 +88,7 @@ def get_influence(loss_func, train_data, test_data, model):
 
     grad_loss = get_loss_gradient(model, loss)
     grad_pred = predict_gradient(test_data, model)
-    hv = hessian_vector_product(model, grad_loss, grad_pred)
+    h_inverse_v = hessian_inverse_vector_product(model, grad_loss, grad_pred)
+    influ = torch.dot(h_inverse_v, grad_loss) / grad_loss.shape[0] 
 
-    return hv
+    return influ

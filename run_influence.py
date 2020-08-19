@@ -42,4 +42,6 @@ for row in dataset.user_item_train_df.values:
         train_data.append(row)
 
 target_data = [target_user, target_item]
-influ = get_influence(loss_func, train_data[0], mf)
+test_data = [target_user, target_item]
+influ = get_influence(loss_func, train_data[0], test_data, mf)
+print(influ)
