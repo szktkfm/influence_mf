@@ -11,7 +11,7 @@ def get_loss(loss_func, train_data, model):
     user = torch.tensor([train_data[0]], dtype=torch.long, device=device)
     item = torch.tensor([train_data[1]], dtype=torch.long, device=device)
     pred = model(user, item)
-    y = torch.tensor([1.])
+    y = torch.tensor([1.], device=device)
     loss = loss_func(pred, y)
 
     return loss
@@ -64,7 +64,7 @@ def hessian_inverse_vector_product(model, grad_loss, v):
     tol = 1e-7
     max_iter = 100
     # init
-    x = torch.rand(v.size())
+    x = torch.rand(v.size(), device=device)
     grad = hessian_vector_product(model, grad_loss, x) - v
     m = grad
     lr = -1 * torch.dot(m, grad) / torch.dot(m, hessian_vector_product(model, grad_loss, m))
@@ -89,6 +89,6 @@ def get_influence(loss_func, train_data, test_data, model):
     grad_loss = get_loss_gradient(model, loss)
     grad_pred = predict_gradient(test_data, model)
     h_inverse_v = hessian_inverse_vector_product(model, grad_loss, grad_pred)
-    influ = torch.dot(h_inverse_v, grad_loss) / grad_loss.shape[0] 
+    influ = -1 * torch.dot(h_inverse_v, grad_loss) / grad_loss.shape[0] 
 
     return influ
